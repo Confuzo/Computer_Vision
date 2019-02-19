@@ -1,3 +1,0 @@
-/home/confuzo/Área de Trabalho/disciplinas/visao_computacional/list_1/question_6/CMakeFiles/rebuild_cache.dir
-/home/confuzo/Área de Trabalho/disciplinas/visao_computacional/list_1/question_6/CMakeFiles/Visao.dir
-/home/confuzo/Área de Trabalho/disciplinas/visao_computacional/list_1/question_6/CMakeFiles/edit_cache.dir
