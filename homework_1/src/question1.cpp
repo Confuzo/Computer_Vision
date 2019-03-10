@@ -12,11 +12,15 @@ int main(){
     bright_(image);
     black_strips(image);
 
-    imwrite("teste.jpg", image);
+    imshow("image with vertical lines", image);
 
     waitKey(0);
 }
 
+/**
+ * Increases the bright of a image 
+ * @param Mat & image
+ * */
 void bright_(Mat & image){
     
     int alpha = 1.9, value;
@@ -34,6 +38,11 @@ void bright_(Mat & image){
 
 }
 
+/**
+ * Draws verticals lines in the image
+ * @param Mat & image 
+ * @param int division
+*/
 void black_strips(Mat & image, int division){
     int cont = 0;
     bool strip = true;
@@ -41,38 +50,13 @@ void black_strips(Mat & image, int division){
         
         cont++;
         if(strip){
-            //line(image, Point(y, 0), Point(y, image.rows -1 ), Scalar(0,0,0), 2, 4, 0);
-            drawLine(image, y , image.rows-1);
+            line(image, Point(y, 0), Point(y, image.rows -1 ), Scalar(0,0,0), 2, 4, 0);
         }
 
         if(cont == division){
             cont= 0;
             strip = !strip;
         }
-        /*++cont;
-        if(strip){
-            for(int x = 0; x < image.rows; x++){
-                for(int a = 0; a < 3; a++){
-                    image.at<Vec3b>(y, x)[a] = 0;
-                }
-            //std::cout << x << " " << y << " " << cont << std::endl;
-            }
-        }
-        if (cont == division){
-            if(strip){
-                strip = false;
-            } else {
-                strip = true;
-            }
-            cont = 0;
-        }*/
     }
 }
 
-void drawLine(Mat & image, int start, int end){
-    for(int i = 0; i < end; i++){
-        for(int a = 0; a< 3; a++){
-            image.at<Vec3b>(i, start)[a] = 0;
-        }
-    }
-}

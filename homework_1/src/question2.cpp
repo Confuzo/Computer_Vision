@@ -28,6 +28,11 @@ int main(){
     return 0;
 }
 
+/**
+ * Detects tthe edges of the image and normalize then 
+ * @param Mat & image
+ * @return Mat dst
+*/
 Mat sobel(Mat &image){
     Mat dst = Mat::zeros(image.size(), image.type());
 
@@ -76,6 +81,12 @@ Mat sobel(Mat &image){
     return dst;
 }
 
+/**
+ * Applies gaussian filter in the image, tthe filter is stronger that are not edges
+ * @param Mat & image
+ * @param Mat & sobel
+ * @return Mat dst 
+*/
 Mat gauss(Mat &image, Mat &sobel){
     Mat dst = Mat::zeros(image.size(), image.type());
 
