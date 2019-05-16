@@ -1,0 +1,7 @@
+set (OpenCV_DIR ~/installation/OpenCV-master/lib/cmake/opencv4)
+cmake_minimum_required(VERSION 2.8)
+project( Visao )
+find_package( OpenCV REQUIRED )
+include_directories( ${OpenCV_INCLUDE_DIRS} )
+add_executable( Visao src/main.cpp)
+target_link_libraries( Visao ${OpenCV_LIBS} )
