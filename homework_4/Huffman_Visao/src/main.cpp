@@ -10,6 +10,7 @@ int main(int argc, char const *argv[]){
 
         Huffman h(argv[1], " ");
         h.createTree();
+        h.encondingSave();
     } else if(argc == 3){
 
     } else {
