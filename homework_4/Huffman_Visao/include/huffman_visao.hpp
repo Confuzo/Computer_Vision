@@ -6,6 +6,8 @@
 #include <iostream>
 #include <fstream>
 #include <bitset>
+#include <sstream>
+#include <vector>
 #include <opencv2/opencv.hpp>
 
 struct Node_V{
@@ -38,9 +40,10 @@ class Huffman{
                 }
         };
         std::priority_queue< Node_V*, std::vector<Node_V*>, Compare> pq;
+        Mat img;
 
         void readFile(){
-            Mat img = imread(in_name, 1);
+            img = imread(in_name, 1);
             int aux;
             if(!img.empty()){
                 for (int x = 0; x < img.rows; x++){
@@ -85,7 +88,7 @@ class Huffman{
             }
 
             codify(root, "");
-            printTree(root);
+            //printTree(root);
         }
 
         void createPQ(){
@@ -115,7 +118,88 @@ class Huffman{
                 printTree(node->right);
             }
             std::cout << node->value << " " << node->frequency << " " << node->code<< std::endl;
-            //std::cout << node->value << " " << node->frequency << std::endl;
+        }
+
+        void encondingSave(){
+            out_name = "binary.bin";
+            std::ofstream output(out_name, std::ios::binary);
+
+            std::string header, size_image, code;
+            std::stringstream ss;
+            unsigned long n;
+            int aux;
+
+            std::vector<char> codes_char;
+
+            for(int i = 0; i < code_nodes.size(); i++){
+                if(code_nodes[i]-> value >= 0){
+                    std::cout << (int)code_nodes[i]->value << " " << code_nodes[i]->code << std::endl;
+                    std::bitset<8> first(code_nodes[i]->value);
+                    n = first.to_ulong();
+                    output.write( reinterpret_cast<const char*>(&n), sizeof(n) );
+
+                    header = code_nodes[i]->code;
+                    for(int j = 0; j < header.size(); j++){
+                        std::bitset<1> codes(header[j]);
+                        n = codes.to_ulong();
+                        output.write( reinterpret_cast<const char*>(&n), sizeof(n));
+                    }
+
+                    //8192
+                    std::bitset<14> space("10000000000000");
+                    n = space.to_ulong();
+                    output.write( reinterpret_cast<const char*>(&n), sizeof(n));
+                }
+            }
+
+            //8193
+            std::bitset<14> end_codes("10000000000001");
+            n = end_codes.to_ulong();
+            output.write( reinterpret_cast<const char*>(&n), sizeof(n));
+
+            ss << img.rows;
+            size_image =  ss.str();
+            std::bitset<12> image_rows(img.rows);
+            n = image_rows.to_ulong();
+            output.write( reinterpret_cast<const char*>(&n), sizeof(n));
+
+            std::bitset<14> space("10000000000000");
+            n = space.to_ulong();
+            output.write( reinterpret_cast<const char*>(&n), sizeof(n));
+
+            ss << img.cols;
+            size_image =  ss.str();
+            std::bitset<12> image_cols(img.cols);
+            n = image_cols.to_ulong();
+            output.write( reinterpret_cast<const char*>(&n), sizeof(n));
+
+            //8194
+            std::bitset<14> end_header("10000000000010");
+            n = end_codes.to_ulong();
+            output.write( reinterpret_cast<const char*>(&n), sizeof(n));
+
+            for (int x = 0; x < img.rows; x++){
+                for(int y = 0; y < img.cols; y++){
+                    aux = (int) img.at<uchar>(x,y);
+                    code =  array[aux]->code;
+                    for(int i = 0; i < code.size(); i++){
+                        codes_char.push_back(code[i]);
+                    }
+                }
+            }
+
+            
+            code = "";
+            for(int i = 0; i < codes_char.size(); i++){
+                code += codes_char[i];
+                if(code.size() == 8){
+                    std::bitset<8> first(code);
+                    n = first.to_ulong();
+                    output.write( reinterpret_cast<const char*>(&n), sizeof(n));
+                    code = "";
+                }
+            }
+            
         }
 };
 #endif
