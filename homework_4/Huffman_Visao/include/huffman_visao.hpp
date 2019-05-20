@@ -8,10 +8,11 @@
 #include <bitset>
 #include <sstream>
 #include <vector>
+#include <map>
 #include <opencv2/opencv.hpp>
 
 struct Node_V{
-    char value;
+    int value;
     int frequency;
     std::string code;
     Node_V * left;
@@ -19,6 +20,11 @@ struct Node_V{
     Node_V(){
         left = NULL;
         right = NULL;
+    }
+
+    friend std::ostream & operator<<( std::ostream& os_, const Node_V & p){
+        os_ << p.value << " " << p.code << std::endl;
+        return os_;
     }
 };
 
@@ -61,9 +67,9 @@ class Huffman{
             }
         }
     public:
-        Huffman(std::string file_in, std::string file_out){
+        Huffman(std::string file_in){
             in_name = file_in;
-            out_name = file_out;
+            out_name = "";
 
             for (int i = 0; i < 256; i++){
                 array[i] = new Node_V;
@@ -72,6 +78,13 @@ class Huffman{
             }
 
         }
+
+        Huffman(std::string file_in, std::string file_out){
+            in_name = file_in;
+            out_name = file_out;
+
+        }
+
         void createTree(){
             createPQ();
             std::priority_queue< Node_V*, std::vector<Node_V*>, Compare> aux(pq);
@@ -121,85 +134,99 @@ class Huffman{
         }
 
         void encondingSave(){
-            out_name = "binary.bin";
+            out_name = "binario.bin";
             std::ofstream output(out_name, std::ios::binary);
 
-            std::string header, size_image, code;
-            std::stringstream ss;
-            unsigned long n;
             int aux;
-
-            std::vector<char> codes_char;
+            char * ptr;
 
             for(int i = 0; i < code_nodes.size(); i++){
-                if(code_nodes[i]-> value >= 0){
-                    std::cout << (int)code_nodes[i]->value << " " << code_nodes[i]->code << std::endl;
-                    std::bitset<8> first(code_nodes[i]->value);
-                    n = first.to_ulong();
-                    output.write( reinterpret_cast<const char*>(&n), sizeof(n) );
-
-                    header = code_nodes[i]->code;
-                    for(int j = 0; j < header.size(); j++){
-                        std::bitset<1> codes(header[j]);
-                        n = codes.to_ulong();
-                        output.write( reinterpret_cast<const char*>(&n), sizeof(n));
-                    }
-
-                    //8192
-                    std::bitset<14> space("10000000000000");
-                    n = space.to_ulong();
-                    output.write( reinterpret_cast<const char*>(&n), sizeof(n));
-                }
+                //output << *code_nodes[i];
+                ptr = (char *)&(code_nodes[i]->value);
+                output.write(ptr, sizeof(int));
+                
+                std::bitset<16> code(code_nodes[i]->code);
+                aux =  code.to_ulong();
+                ptr = (char *)&(aux);
+                output.write(ptr, sizeof(int)); 
+                /*std::bitset<16> code(code_nodes[i]->code);
+                output << static_cast<uint_fast16_t>(code.to_ulong());
+            */
             }
 
-            //8193
-            std::bitset<14> end_codes("10000000000001");
-            n = end_codes.to_ulong();
-            output.write( reinterpret_cast<const char*>(&n), sizeof(n));
+            //output << img.rows << " " << img.cols << std::endl;
+            output.close();
 
-            ss << img.rows;
-            size_image =  ss.str();
-            std::bitset<12> image_rows(img.rows);
-            n = image_rows.to_ulong();
-            output.write( reinterpret_cast<const char*>(&n), sizeof(n));
-
-            std::bitset<14> space("10000000000000");
-            n = space.to_ulong();
-            output.write( reinterpret_cast<const char*>(&n), sizeof(n));
-
-            ss << img.cols;
-            size_image =  ss.str();
-            std::bitset<12> image_cols(img.cols);
-            n = image_cols.to_ulong();
-            output.write( reinterpret_cast<const char*>(&n), sizeof(n));
-
-            //8194
-            std::bitset<14> end_header("10000000000010");
-            n = end_codes.to_ulong();
-            output.write( reinterpret_cast<const char*>(&n), sizeof(n));
-
-            for (int x = 0; x < img.rows; x++){
+            /*std::ofstream arquivo("compactado.bin", std::ios::binary);
+            
+            for(int x = 0; x < img.rows; x++){
                 for(int y = 0; y < img.cols; y++){
-                    aux = (int) img.at<uchar>(x,y);
-                    code =  array[aux]->code;
-                    for(int i = 0; i < code.size(); i++){
-                        codes_char.push_back(code[i]);
+                    aux = img.at<uchar>(x,y);
+                    for(int i = 0; i < code_nodes.size(); i++){
+                        if(code_nodes[i]->value == aux){
+                            code_ = (code_nodes[i]->code);
+                            break;
+                        }
                     }
+                    std::bitset<16> value(code_);
+                    arquivo << static_cast
+                    /*if(code_.size() > 8){
+                        for(int i = 0, k = 7; i < 8; i++, k--){
+                            value[k] = code_[i];
+                        }
+                        code_.erase(0,8);
+                        arquivo << static_cast<uint_fast8_t>(value.to_ulong());
+                    }
+                    std::bitset<8> rest(code_);
+                    char *ptr = (char *)&code_;
+                    arquivo.write(ptr, sizeof(int));
+                    //arquivo << static_cast<uint_fast16_t>(value.to_ulong());
+                }
+            }*/
+
+            //arquivo.close();
+            
+        }
+
+        void decoding(){
+            /*std::ifstream input(in_name, std::ifstream::in);
+            std::string line;
+            std::map<std::string, int> header;
+            std::string values [2];
+            int i;
+
+            while(std::getline(input, line)){
+                std::istringstream ss(line);
+
+                do{ 
+                    ss >> values[i];
+                    i++; 
+                } while (ss);
+
+                i = 0;
+                std::cout << values[0] << " " << values[1] << std::endl;
+                std::bitset<8> convert(values[1]);
+                header[values[0]] = convert.to_ulong();    
+            }*/
+
+            std::ifstream arq;
+            arq.open(in_name, std::ios::binary);
+            arq.seekg(0, arq.end);
+            auto fileSize = arq.tellg();
+            arq.seekg(0, arq.beg);
+            //auto buffer = new char[fileSize];
+            int buffer;
+            int i = 0;
+            while(!arq.eof()){
+                arq.read((char *) &buffer, 4);
+                std::cout << (int)buffer << " ";
+                i++;
+                if(i == 2){
+                    i = 0;
+                    std::cout << std::endl;
                 }
             }
 
-            
-            code = "";
-            for(int i = 0; i < codes_char.size(); i++){
-                code += codes_char[i];
-                if(code.size() == 8){
-                    std::bitset<8> first(code);
-                    n = first.to_ulong();
-                    output.write( reinterpret_cast<const char*>(&n), sizeof(n));
-                    code = "";
-                }
-            }
-            
         }
 };
 #endif
