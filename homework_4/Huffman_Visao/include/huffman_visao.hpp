@@ -23,7 +23,7 @@ struct Node_V{
     }
 
     friend std::ostream & operator<<( std::ostream& os_, const Node_V & p){
-        os_ << p.value << " " << p.code << std::endl;
+        os_ << p.value << "\n" << p.code << std::endl;
         return os_;
     }
 };
@@ -49,7 +49,7 @@ class Huffman{
         Mat img;
 
         void readFile(){
-            img = imread(in_name, 1);
+            img = imread(in_name, 0);
             int aux;
             if(!img.empty()){
                 for (int x = 0; x < img.rows; x++){
@@ -134,99 +134,171 @@ class Huffman{
         }
 
         void encondingSave(){
-            out_name = "binario.bin";
-            std::ofstream output(out_name, std::ios::binary);
+            out_name = "header.txt";
+            std::ofstream output(out_name);
 
             int aux;
-            char * ptr;
-
+            /*
+            char * ptr1 = (char *)&(img.rows);
+            output.write(ptr1, sizeof(  int));
+            char * ptr2 = (char *)&(img.cols);
+            output.write(ptr2, sizeof(int));
+            
             for(int i = 0; i < code_nodes.size(); i++){
-                //output << *code_nodes[i];
-                ptr = (char *)&(code_nodes[i]->value);
-                output.write(ptr, sizeof(int));
+                char * ptr3 = (char *)&(code_nodes[i]->value);
+                output.write(ptr3, sizeof(int));
                 
                 std::bitset<16> code(code_nodes[i]->code);
                 aux =  code.to_ulong();
-                ptr = (char *)&(aux);
-                output.write(ptr, sizeof(int)); 
-                /*std::bitset<16> code(code_nodes[i]->code);
-                output << static_cast<uint_fast16_t>(code.to_ulong());
-            */
+                char * ptr4 = (char *)&(aux);
+                output.write(ptr4, sizeof(int)); 
+            }*/
+            output << img.rows << std::endl;
+            output << img.cols << std::endl;
+            for(int i = 0; i < code_nodes.size(); i++){
+                output << *code_nodes[i];
             }
 
-            //output << img.rows << " " << img.cols << std::endl;
             output.close();
 
-            /*std::ofstream arquivo("compactado.bin", std::ios::binary);
+            std::ofstream archive("file.bin", std::ios::binary);
+            std::string code_ = "";
             
             for(int x = 0; x < img.rows; x++){
                 for(int y = 0; y < img.cols; y++){
                     aux = img.at<uchar>(x,y);
                     for(int i = 0; i < code_nodes.size(); i++){
                         if(code_nodes[i]->value == aux){
-                            code_ = (code_nodes[i]->code);
-                            break;
+                            code_ += (code_nodes[i]->code);
+                            i = code_nodes.size();
                         }
                     }
-                    std::bitset<16> value(code_);
-                    arquivo << static_cast
-                    /*if(code_.size() > 8){
-                        for(int i = 0, k = 7; i < 8; i++, k--){
-                            value[k] = code_[i];
-                        }
-                        code_.erase(0,8);
-                        arquivo << static_cast<uint_fast8_t>(value.to_ulong());
-                    }
-                    std::bitset<8> rest(code_);
-                    char *ptr = (char *)&code_;
-                    arquivo.write(ptr, sizeof(int));
-                    //arquivo << static_cast<uint_fast16_t>(value.to_ulong());
                 }
-            }*/
+            }
+            
+            std::bitset<8> value;
+            while(code_.size() > 0){
+                if(code_.size() >= 8){
+                    for(int i = 0; i < 8; i++){
+                        if(code_[i] == '1'){
+                            value[i] = false;
+                        } else {
+                            value[i] = true;
+                        }
+                    }
+                    aux = value.to_ulong();
+                    char * ptr5 = (char *)&(aux);
+                    archive.write(ptr5, sizeof(char));
+                    code_.erase(0,8);
+                    value.reset(); 
+                } else {
+                    for(int i = 0; i < code_.size(); i++){
+                        value[i] = code_[i];
+                    }
+                    aux = value.to_ulong();
+                    char * ptr6 = (char *)&(aux);
+                    archive.write(ptr6, sizeof(char));
+                    code_ = "";
+                }
+            }
 
-            //arquivo.close();
+            archive.close();
             
         }
 
         void decoding(){
-            /*std::ifstream input(in_name, std::ifstream::in);
-            std::string line;
-            std::map<std::string, int> header;
-            std::string values [2];
-            int i;
 
-            while(std::getline(input, line)){
-                std::istringstream ss(line);
-
-                do{ 
-                    ss >> values[i];
-                    i++; 
-                } while (ss);
-
-                i = 0;
-                std::cout << values[0] << " " << values[1] << std::endl;
-                std::bitset<8> convert(values[1]);
-                header[values[0]] = convert.to_ulong();    
-            }*/
-
-            std::ifstream arq;
+            /*std::ifstream arq;
             arq.open(in_name, std::ios::binary);
+            std::map<int, int> header;
             arq.seekg(0, arq.end);
             auto fileSize = arq.tellg();
             arq.seekg(0, arq.beg);
-            //auto buffer = new char[fileSize];
             int buffer;
-            int i = 0;
+            int i = 0, k = 0, aux1, aux2;
+            std::vector<int> values;
             while(!arq.eof()){
                 arq.read((char *) &buffer, 4);
-                std::cout << (int)buffer << " ";
-                i++;
-                if(i == 2){
+                if(k < 2){
+                    values.push_back((int)buffer);
+                    k++;
+                }
+                if(i == 0){
+                    aux1 = (int) buffer;
+                    i++;
+                } else if (i == 1){
+                    aux2 = (int) buffer;
+                    i++;
+                } else {
+                    header[aux1] = aux2;
                     i = 0;
-                    std::cout << std::endl;
+                }
+            }*/
+            std::ifstream arq;
+            arq.open(in_name);
+            std::string line;
+            int i = 0, k = 0;
+            std::map<std::string , int> header;
+            int values [2];
+            int aux1;
+
+            while(std::getline(arq, line)){
+                if(k < 2){
+                    values[k] = stoi(line);
+                    k++;
+                } else {
+                    if(i == 0){
+                        aux1 = stoi(line);
+                        i++;
+                    } else if (i == 1){
+                        i = 0;
+                        header[line] = aux1;
+                    } 
+                }
+            }
+            arq.close();
+            
+            std::ifstream out;
+            out.open(out_name, std::ios::binary);
+            out.seekg(0, out.end);
+            out.seekg(0, out.beg);
+            int buffer_;
+            std::string code = "";
+            while(!out.eof()){
+                out.read((char *) &buffer_, 1);
+                code += std::bitset<8>(buffer_).to_string();      
+            }
+            
+            Size s(values[0], values[1]);
+            Mat src = Mat::zeros(values[0], values[1], 16);
+
+            /*for(auto it = header.begin(); it != header.end(); it++){
+                std::cout << it->first << " " << it->second << std::endl;
+            }*/
+            
+            int val = 0;
+            for(int x = 0; x < src.rows; x++){
+                for(int y = 0; y < src.cols; y++){
+                    val = search(code, header);
+                    src.at<Vec3b>(y,x) = {val, val, val};
                 }
             }
 
+            imshow("teste", src);
+            waitKey(0);
+        }
+
+        int search(std::string &code, std::map<std::string, int> header){
+            int c = 1;
+            int aux;
+            for(int i = 1; i < code.size(); i++){
+                if(header[code.substr(0,i)]){
+                    aux = header.find(code.substr(0,i))->second;
+                    code.erase(0,i);
+                    return aux;
+                }
+            }
+            return 0;
         }
 };
 #endif
