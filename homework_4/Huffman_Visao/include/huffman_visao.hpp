@@ -138,21 +138,6 @@ class Huffman{
             std::ofstream output(out_name);
 
             int aux;
-            /*
-            char * ptr1 = (char *)&(img.rows);
-            output.write(ptr1, sizeof(  int));
-            char * ptr2 = (char *)&(img.cols);
-            output.write(ptr2, sizeof(int));
-            
-            for(int i = 0; i < code_nodes.size(); i++){
-                char * ptr3 = (char *)&(code_nodes[i]->value);
-                output.write(ptr3, sizeof(int));
-                
-                std::bitset<16> code(code_nodes[i]->code);
-                aux =  code.to_ulong();
-                char * ptr4 = (char *)&(aux);
-                output.write(ptr4, sizeof(int)); 
-            }*/
             output << img.rows << std::endl;
             output << img.cols << std::endl;
             for(int i = 0; i < code_nodes.size(); i++){
@@ -161,10 +146,22 @@ class Huffman{
 
             output.close();
 
-            std::ofstream archive("file.bin", std::ios::binary);
-            std::string code_ = "";
+            std::ofstream archive("file.txt");
+            //std::string code_ = "";
             
             for(int x = 0; x < img.rows; x++){
+                for(int y = 0; y < img.cols; y++){
+                    aux = img.at<uchar>(x,y);
+                    for(int i = 0; i < code_nodes.size(); i++){
+                        if(code_nodes[i]->value == aux){
+                            archive << (code_nodes[i]->code);
+                            i = code_nodes.size();
+                        }
+                    }
+                }
+            }
+
+            /*for(int x = 0; x < img.rows; x++){
                 for(int y = 0; y < img.cols; y++){
                     aux = img.at<uchar>(x,y);
                     for(int i = 0; i < code_nodes.size(); i++){
@@ -176,6 +173,7 @@ class Huffman{
                 }
             }
             
+            std::cout << code_ << std::endl;
             std::bitset<8> value;
             while(code_.size() > 0){
                 if(code_.size() >= 8){
@@ -200,7 +198,7 @@ class Huffman{
                     archive.write(ptr6, sizeof(char));
                     code_ = "";
                 }
-            }
+            }*/
 
             archive.close();
             
@@ -208,32 +206,6 @@ class Huffman{
 
         void decoding(){
 
-            /*std::ifstream arq;
-            arq.open(in_name, std::ios::binary);
-            std::map<int, int> header;
-            arq.seekg(0, arq.end);
-            auto fileSize = arq.tellg();
-            arq.seekg(0, arq.beg);
-            int buffer;
-            int i = 0, k = 0, aux1, aux2;
-            std::vector<int> values;
-            while(!arq.eof()){
-                arq.read((char *) &buffer, 4);
-                if(k < 2){
-                    values.push_back((int)buffer);
-                    k++;
-                }
-                if(i == 0){
-                    aux1 = (int) buffer;
-                    i++;
-                } else if (i == 1){
-                    aux2 = (int) buffer;
-                    i++;
-                } else {
-                    header[aux1] = aux2;
-                    i = 0;
-                }
-            }*/
             std::ifstream arq;
             arq.open(in_name);
             std::string line;
@@ -259,7 +231,13 @@ class Huffman{
             arq.close();
             
             std::ifstream out;
-            out.open(out_name, std::ios::binary);
+            out.open(out_name);
+            std::string code = "";
+            while(std::getline(out, line)){
+                code += line;
+            }
+
+            /*out.open(out_name, std::ios::binary);
             out.seekg(0, out.end);
             out.seekg(0, out.beg);
             int buffer_;
@@ -268,19 +246,15 @@ class Huffman{
                 out.read((char *) &buffer_, 1);
                 code += std::bitset<8>(buffer_).to_string();      
             }
-            
-            Size s(values[0], values[1]);
-            Mat src = Mat::zeros(values[0], values[1], 16);
+            */
 
-            /*for(auto it = header.begin(); it != header.end(); it++){
-                std::cout << it->first << " " << it->second << std::endl;
-            }*/
+            Mat src = Mat::zeros(values[0], values[1], CV_8UC1);
             
             int val = 0;
             for(int x = 0; x < src.rows; x++){
                 for(int y = 0; y < src.cols; y++){
                     val = search(code, header);
-                    src.at<Vec3b>(y,x) = {val, val, val};
+                    src.at<uchar>(x,y) = (char) val;
                 }
             }
 
