@@ -10,20 +10,22 @@ class Hough{
 public:
     Mat img;
 
-    Hough(std::string filename){
+    Hough(std::string filename, int c){
         img = imread(filename);
+        coeficient = c;
         detectLines();
     }
 
 private:
 
+    int coeficient;
     void detectLines(){
         Mat src = img.clone();
         cvtColor(src, src, cv::COLOR_RGB2GRAY);
         blur( src, src, Size(3,3) );
         //adaptiveThreshold(src, src, 255, ADAPTIVE_THRESH_GAUSSIAN_C, THRESH_BINARY,13,4);
         Canny(src, src, 50, 150, 3);
-        imshow("teste1", src);
+        //imshow("teste1", src);
         int diag = hypot(src.rows, src.cols);
         int rho, theta;
 
@@ -41,7 +43,7 @@ private:
 
         drawLines(votes, diag);
 
-        imshow("teste", img);
+        imshow("lines drawned", img);
         waitKey();
     }
 
@@ -50,7 +52,7 @@ private:
         int rho, theta;
         for(int i = 0; i < votes.size(); i++){
             for(int k = 0; k < votes[i].size(); ++k){
-                if(votes[i][k] > 200){
+                if(votes[i][k] > coeficient){
 
                     rho = i - diag;
                     theta = k - 90;
@@ -71,9 +73,6 @@ private:
                 
             }
         }
-        /*Point dummy1(10, 10), dummy2(100, 100);
-        line(img, dummy1, dummy2, Scalar(0, 0, 255), 1, LINE_AA);*/
-
     }
 };
 
